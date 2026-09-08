@@ -1,6 +1,6 @@
 # Project details
 
-Full methodological and technical description of the dissertation code. The
+Full methodological and technical description of the analysis pipeline. The
 top-level [README](../README.md) is the short overview; this page keeps the
 complete pipeline, the innovation summary, the web-app risk calculation, run
 instructions, and the file-rename history.
