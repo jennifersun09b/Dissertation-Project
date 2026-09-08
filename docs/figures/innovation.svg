@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="800" viewBox="0 0 1100 800" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6472"/>
+    </marker>
+    <style>
+      .title { font-size: 22px; font-weight: 700; fill: #1f2933; }
+      .subtitle { font-size: 13px; fill: #5b6472; }
+      .lane { font-size: 11.5px; font-weight: 700; letter-spacing: 1.5px; fill: #7b8794; }
+      .card-title { font-size: 14px; font-weight: 700; fill: #1f2933; }
+      .num { font-size: 22px; font-weight: 700; fill: #ffffff; }
+      .k { font-size: 10.5px; font-weight: 700; letter-spacing: 1px; }
+      .t { font-size: 12px; fill: #52606d; }
+      .tb { font-size: 12px; fill: #1f2933; }
+      .small { font-size: 11px; fill: #5b6472; }
+      .axis { stroke: #5b6472; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .tick { stroke: #5b6472; stroke-width: 2; }
+      .bracket { stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="1100" height="800" fill="#ffffff"/>
+  <text x="40" y="42" class="title">What is new in this project</text>
+  <text x="40" y="62" class="subtitle">Prediction and causation are treated as complementary questions inside one timing-aware framework,</text>
+  <text x="40" y="79" class="subtitle">so that a finding which looks robust can be recognised as reverse causation by design rather than by accident.</text>
+
+  <!-- ============ Timing-aware design ============ -->
+  <rect x="40" y="100" width="1020" height="234" rx="10" fill="#f6f7f9" stroke="#cbd2d9"/>
+  <text x="56" y="120" class="lane">THE CORE IDEA · THREE TEMPORAL MODELS OF THE SAME COHORT</text>
+
+  <!-- timeline axis -->
+  <line x1="90" y1="182" x2="1010" y2="182" class="axis"/>
+  <line x1="200" y1="170" x2="200" y2="194" class="tick"/>
+  <line x1="560" y1="170" x2="560" y2="194" class="tick"/>
+  <text x="200" y="160" text-anchor="middle" class="tb" font-weight="700">T0 · baseline visit</text>
+  <text x="200" y="210" text-anchor="middle" class="small">lifestyle measured (1st)</text>
+  <text x="560" y="160" text-anchor="middle" class="tb" font-weight="700">T2 · imaging visit</text>
+  <text x="560" y="210" text-anchor="middle" class="small">lifestyle measured (2nd)</text>
+  <text x="1000" y="160" text-anchor="end" class="tb" font-weight="700">end of follow-up</text>
+
+  <!-- event markers -->
+  <g>
+    <circle cx="140" cy="182" r="6" fill="#9aa5b1"/>
+    <text x="140" y="228" text-anchor="middle" class="small">CVD before T0</text>
+    <text x="140" y="241" text-anchor="middle" class="small">excluded</text>
+  </g>
+  <g>
+    <circle cx="380" cy="182" r="6" fill="#e0a13a"/>
+    <text x="380" y="228" text-anchor="middle" class="small">CVD between T0 and T2</text>
+    <text x="380" y="241" text-anchor="middle" class="small">illness may have prompted the change</text>
+  </g>
+  <g>
+    <circle cx="790" cy="182" r="6" fill="#3f8f5f"/>
+    <text x="790" y="228" text-anchor="middle" class="small">CVD after T2</text>
+    <text x="790" y="241" text-anchor="middle" class="small">outcome follows the exposure</text>
+  </g>
+
+  <!-- brackets for the three models -->
+  <path d="M 205 262 L 205 270 L 1000 270 L 1000 262" class="bracket" stroke="#e0a13a"/>
+  <text x="602" y="286" text-anchor="middle" class="t"><tspan font-weight="700" fill="#b07a1c">Primary window</tspan> · change T0→T2 vs CVD any time after T0 (71,428 participants)</text>
+
+  <path d="M 565 300 L 565 308 L 1000 308 L 1000 300" class="bracket" stroke="#3f8f5f"/>
+  <text x="782" y="322" text-anchor="middle" class="t" style="font-size:11.5px"><tspan font-weight="700" fill="#2f6f4e">Strict window</tspan> · CVD after T2 only (sensitivity cohort)</text>
+
+  <path d="M 90 300 L 90 308 L 540 308 L 540 300" class="bracket" stroke="#6c7a89"/>
+  <text x="315" y="322" text-anchor="middle" class="t" style="font-size:11.5px"><tspan font-weight="700" fill="#52606d">Baseline reference</tspan> · lifestyle level at T0, no timing ambiguity</text>
+
+  <!-- ============ Six innovation cards ============ -->
+  <!-- Row 1 -->
+  <g>
+    <rect x="40" y="342" width="330" height="212" rx="10" fill="#eef4ff" stroke="#9db8f0"/>
+    <rect x="56" y="356" width="34" height="34" rx="8" fill="#3b6fd1"/>
+    <text x="73" y="380" text-anchor="middle" class="num">1</text>
+    <text x="100" y="371" class="card-title">Prediction and causation,</text>
+    <text x="100" y="387" class="card-title">one cohort</text>
+    <text x="56" y="416" class="k" fill="#7b8794">USUAL PRACTICE</text>
+    <text x="56" y="432" class="t">Studies predict who is at risk, or estimate</text>
+    <text x="56" y="447" class="t">what lifestyle does, rarely both together.</text>
+    <text x="56" y="474" class="k" fill="#3b6fd1">HERE</text>
+    <text x="56" y="490" class="tb">Baseline prediction (458,840) and causal forests</text>
+    <text x="56" y="505" class="tb">of lifestyle change (71,428) in the same cohort,</text>
+    <text x="56" y="520" class="tb">answering "who" and "what could help" side by</text>
+    <text x="56" y="535" class="tb">side without confusing the two.</text>
+  </g>
+
+  <g>
+    <rect x="385" y="342" width="330" height="212" rx="10" fill="#fff8e6" stroke="#f0c36d"/>
+    <rect x="401" y="356" width="34" height="34" rx="8" fill="#e0a13a"/>
+    <text x="418" y="380" text-anchor="middle" class="num">2</text>
+    <text x="445" y="371" class="card-title">Reverse causation caught</text>
+    <text x="445" y="387" class="card-title">by design</text>
+    <text x="401" y="416" class="k" fill="#7b8794">USUAL PRACTICE</text>
+    <text x="401" y="432" class="t">Event timing relative to the second lifestyle</text>
+    <text x="401" y="447" class="t">measurement is rarely modelled explicitly.</text>
+    <text x="401" y="474" class="k" fill="#b07a1c">HERE</text>
+    <text x="401" y="490" class="tb">The only FDR-significant result (cutting alcohol,</text>
+    <text x="401" y="505" class="tb">+0.98 pp) vanished under the strict window and</text>
+    <text x="401" y="520" class="tb">recurred at baseline: illness-prompted change,</text>
+    <text x="401" y="535" class="tb">not a treatment effect. Same for quitting smoking.</text>
+  </g>
+
+  <g>
+    <rect x="730" y="342" width="330" height="212" rx="10" fill="#f3ecfb" stroke="#b79ae0"/>
+    <rect x="746" y="356" width="34" height="34" rx="8" fill="#8e6cc7"/>
+    <text x="763" y="380" text-anchor="middle" class="num">3</text>
+    <text x="790" y="371" class="card-title">Lifestyle change as the</text>
+    <text x="790" y="387" class="card-title">exposure</text>
+    <text x="746" y="416" class="k" fill="#7b8794">USUAL PRACTICE</text>
+    <text x="746" y="432" class="t">A few lifestyle variables measured once, used</text>
+    <text x="746" y="447" class="t">as static predictors.</text>
+    <text x="746" y="474" class="k" fill="#8e6cc7">HERE</text>
+    <text x="746" y="490" class="tb">Six domains at two visits. Exact baseline-specific</text>
+    <text x="746" y="505" class="tb">transitions (stayed vs moved): 24 single-domain</text>
+    <text x="746" y="520" class="tb">contrasts and 108 estimable joint contrasts via</text>
+    <text x="746" y="535" class="tb">multi-arm causal forests, under target-trial rules.</text>
+  </g>
+
+  <!-- Row 2 -->
+  <g>
+    <rect x="40" y="570" width="330" height="212" rx="10" fill="#eafaf1" stroke="#7fcf9f"/>
+    <rect x="56" y="584" width="34" height="34" rx="8" fill="#3f8f5f"/>
+    <text x="73" y="608" text-anchor="middle" class="num">4</text>
+    <text x="100" y="599" class="card-title">Nulls that inform,</text>
+    <text x="100" y="615" class="card-title">not disappoint</text>
+    <text x="56" y="644" class="k" fill="#7b8794">USUAL PRACTICE</text>
+    <text x="56" y="660" class="t">A non-significant effect is reported as</text>
+    <text x="56" y="675" class="t">"no evidence" and left there.</text>
+    <text x="56" y="702" class="k" fill="#2f6f4e">HERE</text>
+    <text x="56" y="718" class="tb">Confidence intervals narrow enough to rule out</text>
+    <text x="56" y="733" class="tb">effects beyond about ±0.5 to 1 pp, with overlap,</text>
+    <text x="56" y="748" class="tb">estimability and support audited openly, plus</text>
+    <text x="56" y="763" class="tb">E-values and bias scenarios for confounding.</text>
+  </g>
+
+  <g>
+    <rect x="385" y="570" width="330" height="212" rx="10" fill="#fdf0f0" stroke="#e8a3a3"/>
+    <rect x="401" y="584" width="34" height="34" rx="8" fill="#c65a5a"/>
+    <text x="418" y="608" text-anchor="middle" class="num">5</text>
+    <text x="445" y="599" class="card-title">Causal estimates validated</text>
+    <text x="445" y="615" class="card-title">in a second cohort</text>
+    <text x="401" y="644" class="k" fill="#7b8794">USUAL PRACTICE</text>
+    <text x="401" y="660" class="t">External validation is routine for prediction</text>
+    <text x="401" y="675" class="t">models, rare for causal effect estimates.</text>
+    <text x="401" y="702" class="k" fill="#c65a5a">HERE</text>
+    <text x="401" y="718" class="tb">Transitions re-estimated in NHEFS (US, different</text>
+    <text x="401" y="733" class="tb">era): direction agreed for 8 of 11 testable</text>
+    <text x="401" y="748" class="tb">contrasts with overlapping CIs, and the alcohol</text>
+    <text x="401" y="763" class="tb">paradox recurred, pointing to a general mechanism.</text>
+  </g>
+
+  <g>
+    <rect x="730" y="570" width="330" height="212" rx="10" fill="#f6f7f9" stroke="#cbd2d9"/>
+    <rect x="746" y="584" width="34" height="34" rx="8" fill="#52606d"/>
+    <text x="763" y="608" text-anchor="middle" class="num">6</text>
+    <text x="790" y="599" class="card-title">From estimates to an</text>
+    <text x="790" y="615" class="card-title">honest interactive tool</text>
+    <text x="746" y="644" class="k" fill="#7b8794">USUAL PRACTICE</text>
+    <text x="746" y="660" class="t">Risk calculators need blood pressure, lipids and</text>
+    <text x="746" y="675" class="t">clinical history, and report a single number.</text>
+    <text x="746" y="702" class="k" fill="#52606d">HERE</text>
+    <text x="746" y="718" class="tb">AUC 0.718 from self-reported lifestyle and basic</text>
+    <text x="746" y="733" class="tb">demographics alone. The app shows absolute risk</text>
+    <text x="746" y="748" class="tb">and every lifestyle-change estimate with its CI,</text>
+    <text x="746" y="763" class="tb">and never blends the causal and predictive numbers.</text>
+  </g>
+</svg>

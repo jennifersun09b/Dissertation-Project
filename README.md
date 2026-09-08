@@ -9,7 +9,6 @@ data-preparation pipeline for UK Biobank, a baseline predictive model of
 longitudinal lifestyle change, and the Streamlit web app that presents both
 sets of results to a user.
 
-- Full dissertation: [`docs/dissertation.pdf`](docs/dissertation.pdf)
 - Step-by-step runbook: [`docs/WORKFLOW.md`](docs/WORKFLOW.md)
 - Deployed web app source: [`cvd_webapp/`](cvd_webapp/) (also maintained at
   [jennifersun09b/cvd-webapp](https://github.com/jennifersun09b/cvd-webapp))
@@ -33,6 +32,25 @@ of effect, and well-supported transitions excluded absolute risk differences
 above roughly one percentage point. Causal estimates were externally validated
 in NHEFS, and both streams were integrated into an interactive tool.
 
+## What is innovative about this project
+
+![Innovation](docs/figures/innovation.svg)
+
+Most studies either predict who is at cardiovascular risk or estimate what a
+lifestyle factor does. This project does both in one cohort, treats them as
+different questions, and builds the awareness of event timing into the design
+rather than discovering it afterwards. The six contributions, with the code
+that implements each:
+
+| # | Contribution | Where in the code |
+| --- | --- | --- |
+| 1 | **Prediction and causation side by side.** A baseline risk model on all 458,840 participants and causal forests of lifestyle change on the 71,428 with two lifestyle measurements, in the same cohort, never blended. | `src/predictive_model/`, `src/causal_forest/` |
+| 2 | **Reverse causation caught by design.** Three temporal models of the same data: the broad primary window, a strict window with CVD after the imaging visit only, and a baseline-level reference. The one result that survived multiple-testing correction (cutting alcohol, +0.98 pp) vanished under the strict window and reappeared at baseline, so it was identified as illness-prompted change rather than a treatment effect. | `04_imaging_visit_separation.py`, `baseline_reference.R` |
+| 3 | **Lifestyle change as the exposure.** Six lifestyle domains measured at two visits, defined as exact baseline-specific transitions (stayed versus moved) under target-trial rules: 24 single-domain contrasts and 108 estimable joint contrasts using multi-arm causal forests. | `05_cohort_recoding.py`, `single_variable.R`, `combined_variable.R` |
+| 4 | **Nulls that inform.** Confidence intervals narrow enough to rule out effects beyond roughly plus or minus one percentage point, with treatment-group overlap, estimability and support audited openly, and unmeasured confounding bounded by E-values and quantitative bias analysis. | `single_variable.R`, `unmeasured_confounding.R` |
+| 5 | **Causal estimates externally validated.** The transitions were re-estimated in NHEFS, a US cohort from a different era. Direction agreed for 8 of 11 testable contrasts with overlapping intervals, and the alcohol paradox recurred, pointing to a general feature of observational lifestyle-change data. | not yet in this repository (dissertation section 3.6) |
+| 6 | **An honest interactive tool.** Good discrimination (AUC 0.718) from self-reported lifestyle and basic demographics alone, with no blood pressure, lipids or clinical history. The app shows absolute risk and every lifestyle-change estimate with its confidence interval, and applies average rather than personalised effects because heterogeneity was negligible. | `cvd_webapp/` |
+
 ## Project structure and logic
 
 ![Project structure](docs/figures/project_structure.svg)
@@ -49,9 +67,8 @@ Dissertation-Project/
 ├── README.md
 ├── requirements.txt                 Python packages for the pipeline
 ├── docs/
-│   ├── dissertation.pdf             the written dissertation
 │   ├── WORKFLOW.md                  execution order, commands, env vars
-│   └── figures/                     the two diagrams shown in this README
+│   └── figures/                     the diagrams shown in this README
 ├── src/
 │   ├── data_preparation/            run in numbered order
 │   │   ├── 01_overview_dataset.py          describe the raw source tables
