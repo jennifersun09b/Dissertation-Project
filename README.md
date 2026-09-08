@@ -1,81 +1,95 @@
-# Causal and Predictive ML for Cardiovascular Risk in UK Biobank
+# Causal and Predictive Machine Learning for Cardiovascular Risk in UK Biobank
 
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
-![R](https://img.shields.io/badge/R-grf%20%7C%20tidyverse-276DC3?logo=r&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-pipelines-F7931E?logo=scikit-learn&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-app-FF4B4B?logo=streamlit&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Render%20blueprint-2496ED?logo=docker&logoColor=white)
+Code for an MSc Health Data Science dissertation (UCL, 2026) that combines two
+questions in one cohort: how well can lifestyle and demographic information
+predict incident cardiovascular disease (CVD), and does changing a lifestyle
+factor causally alter that risk. The pipeline runs from raw UK Biobank tables
+to a baseline prediction model, causal-forest estimates of lifestyle change,
+external validation, and a Streamlit app that presents both.
 
-**Can machine learning say both *who* is at risk of heart disease and *which lifestyle change* would actually lower it?**
-MSc Health Data Science dissertation (UCL, 2026) answering both questions in one 500,000-participant cohort,
-end to end: data engineering on raw UK Biobank tables, predictive and causal modelling, external validation,
-and a deployed decision-support app.
+## Key results
 
-## Results at a glance
+- **Prediction.** Logistic regression, random forest, XGBoost and LightGBM were
+  compared on 458,840 participants using age, sex, BMI and six lifestyle
+  scores. All reached AUC 0.714 to 0.718 with good calibration; logistic
+  regression was kept for interpretability (AUC 0.718, 95% CI 0.712 to 0.724).
+- **Causal effects.** In 71,428 participants with lifestyle measured at two
+  visits, doubly robust causal forests estimated 24 single-domain lifestyle
+  transitions and multi-arm forests estimated 108 joint contrasts. Most showed
+  no effect, with confidence intervals tight enough to exclude absolute risk
+  differences above roughly one percentage point.
+- **Reverse causation identified by design.** The one transition surviving
+  multiple-testing correction (reducing alcohol, +0.98 pp) disappeared when
+  only CVD events after the second lifestyle measurement were counted and
+  recurred in a baseline-level reference model, consistent with illness
+  prompting the change rather than the change affecting risk.
+- **External validation.** Re-estimating the transitions in NHEFS (US cohort)
+  gave directional agreement for 8 of 11 testable contrasts, with overlapping
+  intervals throughout.
 
-| | |
-| ---: | --- |
-| **458,840** | participants in the baseline CVD prediction model, four model families compared |
-| **AUC 0.718** (95% CI 0.712 to 0.724) | from self-reported lifestyle and demographics only, no blood tests or clinical history |
-| **71,428** | participants with lifestyle measured at two visits, used for causal analysis |
-| **24 + 108** | single and joint lifestyle-change effects estimated with doubly robust causal forests |
-| **8 of 11** | causal contrasts replicated in direction in an independent US cohort (NHEFS) |
-| **1 app** | Streamlit tool that ships both models to end users with full uncertainty |
-
-**Headline finding.** Most short-horizon lifestyle changes had no detectable effect, and the confidence
-intervals were tight enough to rule out changes above about one percentage point of absolute risk. The single
-result that survived multiple-testing correction, higher risk after cutting alcohol, was traced to reverse
-causation by a timing-aware design that fitted three temporal models of the same cohort. Not finding an
-effect, and proving why an apparent one was spurious, is the substance of the work.
-
-## What this project demonstrates
-
-| Capability | Evidence in this repository |
-| --- | --- |
-| **Causal inference at scale** | Target-trial emulation, honest doubly robust causal forests, multi-arm forests for joint treatments, overlap weighting and trimming, E-values and quantitative bias analysis. [`src/causal_forest/`](src/causal_forest/) |
-| **Predictive modelling done properly** | Logistic regression vs random forest, XGBoost and LightGBM with tuned pipelines, calibration slope and intercept, scaled Brier, DeLong tests, decision curves, bootstrap optimism correction, subgroup performance. [`predictive_model.py`](src/predictive_model/predictive_model.py) |
-| **Data engineering on biobank data** | Reproducible five-step pipeline turning raw touchscreen fields into analysis cohorts, configured by environment variables and run on an HPC cluster. [`src/data_preparation/`](src/data_preparation/) |
-| **Epidemiological study design** | Primary, strict post-exposure and baseline-reference temporal models; two outcome definitions; sensitivity analyses for timing, overlap and unmeasured confounding; external validation. [`docs/figures/innovation.svg`](docs/figures/innovation.svg) |
-| **Shipping models to users** | scikit-learn pipeline and R results exported as versioned joblib artefacts (R to Python via reticulate), loaded by a Streamlit app with Docker and Render deployment. [`cvd_webapp/`](cvd_webapp/) |
-| **Communicating uncertainty** | Every estimate shown with its interval, forest plots for effects, predictive and causal numbers kept separate and explained in plain language. [`docs/figures/risk_calculation.svg`](docs/figures/risk_calculation.svg) |
-
-## How it fits together
+## How it works
 
 ![Project structure](docs/figures/project_structure.svg)
 
-One preparation stage feeds two independent modelling branches. Branch A fits the baseline risk model on
-every participant. Branch B fits causal forests on the longitudinal cohort. Each branch exports an artefact,
-and the web app consumes both. Further diagrams: [how the app computes risk](docs/figures/risk_calculation.svg)
+A shared preparation stage builds the analysis cohorts, then two independent
+branches produce model artefacts that the web app loads.
+
+**Data preparation** (`src/data_preparation/`, run in order). Scores six
+lifestyle domains (sleep, smoking, alcohol, diet, physical activity, mental
+health) at baseline and imaging visits from raw touchscreen fields, merges
+covariates and outcomes, classifies each participant's CVD timing relative to
+the two visits, and recodes exposures to 0/1/2 levels with explicit
+transition variables. Lifestyle categories are never imputed.
+
+**Predictive model** (`src/predictive_model/`). scikit-learn pipelines with
+spline terms for age and BMI, one-hot categories and standardised scores;
+randomised hyperparameter search; evaluation by AUC with DeLong tests,
+calibration slope and intercept, scaled Brier score, decision curves and
+bootstrap optimism correction. The final pipeline is exported with joblib.
+
+**Causal forests** (`src/causal_forest/`, R with `grf`). Each transition is a
+binary treatment (moved vs stayed) under target-trial rules, with honest
+forests, doubly robust average treatment effects, overlap weighting and
+trimming, heterogeneity tests (BLP, RATE), subgroup effects and seed-stability
+checks. `combined_variable.R` uses multi-arm forests for paired changes.
+`unmeasured_confounding.R` adds E-values and quantitative bias analysis.
+`baseline_reference.R` estimates baseline-level effects as a temporally
+unambiguous reference. Results are exported to joblib via reticulate.
+
+**Web app** (`cvd_webapp/`). A Streamlit questionnaire reproduces the UK
+Biobank items, computes absolute risk from the predictive pipeline, looks up
+the causal effect of each available lifestyle improvement, and shows every
+number with its confidence interval. Predictive and causal results are kept
+separate. See [how the app computes risk](docs/figures/risk_calculation.svg)
 and [what is new in the design](docs/figures/innovation.svg).
 
-## Tech stack
-
-**Python:** pandas, NumPy, scikit-learn, XGBoost, LightGBM, joblib, matplotlib, Plotly, Streamlit.
-**R:** grf (generalized random forests), tidyverse, reticulate.
-**Infrastructure:** UCL HPC cluster, Docker, Render, Git.
-
-## Repository map
+## Repository layout
 
 ```
-src/data_preparation/    01–05: overview → merge & score → EDA → CVD timing → cohort recoding
-src/predictive_model/    baseline CVD risk model, evaluation, artefact export
-src/causal_forest/       single-variable, combined-variable, confounding sensitivity, baseline reference
-cvd_webapp/              Streamlit app, model loading, questionnaire scoring, recommendations
-docs/                    PROJECT_DETAILS.md (full methods), WORKFLOW.md (runbook), figures/
+src/data_preparation/    01_overview → 02_data_merge → 03_eda → 04_cvd_timing → 05_cohort_recoding
+src/predictive_model/    predictive_model.py
+src/causal_forest/       single_variable.R · combined_variable.R · unmeasured_confounding.R · baseline_reference.R
+cvd_webapp/              Streamlit app, model loading, questionnaire scoring, recommendations, Dockerfile
+docs/                    PROJECT_DETAILS.md (full methods) · WORKFLOW.md (commands) · figures/
 ```
 
-## Run the app locally
+## Getting started
 
 ```bash
-cd cvd_webapp
 pip install -r requirements.txt
-streamlit run app.py
+Rscript src/causal_forest/install_packages.R
+
+# run the app with the committed model artefacts
+cd cvd_webapp && pip install -r requirements.txt && streamlit run app.py
 ```
 
-Full pipeline commands, environment variables and design notes are in
-[`docs/PROJECT_DETAILS.md`](docs/PROJECT_DETAILS.md) and [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-UK Biobank data cannot be redistributed, so no participant data or result tables are stored here.
+Pipeline scripts read paths from environment variables (defaults point to the
+HPC layout). Step-by-step commands are in [`docs/WORKFLOW.md`](docs/WORKFLOW.md);
+design notes, the pipeline flowchart and the file-rename history are in
+[`docs/PROJECT_DETAILS.md`](docs/PROJECT_DETAILS.md).
 
----
+UK Biobank data cannot be redistributed. No participant-level data, derived
+cohorts or result tables are stored here; only the three small model artefacts
+the app needs are committed.
 
-Jennifer Sun · MSc Health Data Science, University College London · [github.com/jennifersun09b](https://github.com/jennifersun09b)
+**Stack:** Python (pandas, scikit-learn, XGBoost, LightGBM, joblib, Plotly, Streamlit), R (grf, tidyverse, reticulate), Docker.
