@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="900" viewBox="0 0 1100 900" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6472"/>
+    </marker>
+    <style>
+      .title { font-size: 22px; font-weight: 700; fill: #1f2933; }
+      .subtitle { font-size: 13px; fill: #5b6472; }
+      .lane { font-size: 11.5px; font-weight: 700; letter-spacing: 1.5px; fill: #7b8794; }
+      .box-title { font-size: 14px; font-weight: 700; fill: #1f2933; }
+      .box-sub { font-size: 12px; fill: #52606d; }
+      .code { font-family: Menlo, Consolas, monospace; font-size: 11px; fill: #323f4b; }
+      .file { font-family: Menlo, Consolas, monospace; font-size: 10.5px; fill: #616e7c; }
+      .formula { font-family: Menlo, Consolas, monospace; font-size: 12px; fill: #1f2933; }
+      .edge { stroke: #5b6472; stroke-width: 1.6; fill: none; marker-end: url(#arrow); }
+      .edge-label { font-size: 11px; fill: #5b6472; }
+      .big { font-size: 26px; font-weight: 700; }
+      .tag { font-size: 10.5px; font-weight: 700; letter-spacing: 1px; }
+    </style>
+  </defs>
+
+  <rect width="1100" height="900" fill="#ffffff"/>
+  <text x="40" y="42" class="title">How the web app calculates a person's numbers</text>
+  <text x="40" y="62" class="subtitle">One questionnaire feeds two independent models: a predictive model for absolute risk (Section 1)</text>
+  <text x="40" y="79" class="subtitle">and causal-forest tables for the effect of changing a habit (Sections 2 and 3). Advice (Section 4) is guideline-based.</text>
+
+  <!-- ============ Step 1: questionnaire ============ -->
+  <rect x="40" y="100" width="1020" height="150" rx="10" fill="#fff8e6" stroke="#f0c36d"/>
+  <text x="56" y="120" class="lane">STEP 1 · QUESTIONNAIRE</text>
+  <text x="1044" y="120" text-anchor="end" class="code">cvd_webapp/questions.py</text>
+  <text x="60" y="142" class="box-sub">The questions reproduce the UK Biobank touchscreen items used to build the modelling variables, so answers land on the scales the models were trained on.</text>
+
+  <rect x="60" y="158" width="150" height="76" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="135" y="180" text-anchor="middle" class="box-title">Demographics</text>
+  <text x="135" y="200" text-anchor="middle" class="box-sub">age · sex · BMI</text>
+  <text x="135" y="218" text-anchor="middle" class="file">BMI from height + weight</text>
+
+  <rect x="226" y="158" width="130" height="76" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="291" y="180" text-anchor="middle" class="box-title">Sleep 0–2</text>
+  <text x="291" y="198" text-anchor="middle" class="box-sub">5 healthy components</text>
+  <text x="291" y="216" text-anchor="middle" class="file">≥4 pts → 2, ≤2 → 0</text>
+
+  <rect x="368" y="158" width="130" height="76" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="433" y="180" text-anchor="middle" class="box-title">Smoking 0–2</text>
+  <text x="433" y="198" text-anchor="middle" class="box-sub">never / previous /</text>
+  <text x="433" y="214" text-anchor="middle" class="box-sub">current</text>
+
+  <rect x="510" y="158" width="130" height="76" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="575" y="180" text-anchor="middle" class="box-title">Alcohol 0–4</text>
+  <text x="575" y="198" text-anchor="middle" class="box-sub">drinker status +</text>
+  <text x="575" y="214" text-anchor="middle" class="box-sub">intake frequency</text>
+
+  <rect x="652" y="158" width="130" height="76" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="717" y="180" text-anchor="middle" class="box-title">Diet 0–3</text>
+  <text x="717" y="198" text-anchor="middle" class="box-sub">fruit/veg · fish ·</text>
+  <text x="717" y="214" text-anchor="middle" class="box-sub">red/processed meat</text>
+
+  <rect x="794" y="158" width="120" height="76" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="854" y="180" text-anchor="middle" class="box-title">Activity 0–2</text>
+  <text x="854" y="198" text-anchor="middle" class="box-sub">weekly MET minutes</text>
+  <text x="854" y="214" text-anchor="middle" class="box-sub">low / moderate / high</text>
+
+  <rect x="926" y="158" width="114" height="76" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="983" y="180" text-anchor="middle" class="box-title">Mental 0–3</text>
+  <text x="983" y="198" text-anchor="middle" class="box-sub">number of symptom</text>
+  <text x="983" y="214" text-anchor="middle" class="box-sub">areas reported</text>
+
+  <!-- questionnaire -> branches -->
+  <path d="M 290 250 L 290 294" class="edge"/>
+  <text x="298" y="276" class="edge-label">age, sex, BMI + 6 raw lifestyle scores (9 predictors)</text>
+  <path d="M 810 250 L 810 294" class="edge"/>
+  <text x="818" y="276" class="edge-label">6 raw lifestyle scores</text>
+
+  <!-- ============ Section 1: predictive ============ -->
+  <rect x="40" y="296" width="500" height="352" rx="10" fill="#eafaf1" stroke="#7fcf9f"/>
+  <text x="56" y="316" class="lane">SECTION 1 · YOUR RISK   (ASSOCIATIONAL)</text>
+
+  <rect x="60" y="330" width="460" height="92" rx="6" fill="#ffffff" stroke="#7fcf9f"/>
+  <text x="80" y="352" class="box-title">Predictive model · logistic regression pipeline</text>
+  <text x="80" y="370" class="file">cvd_webapp/model/predictive_model.joblib</text>
+  <text x="80" y="390" class="box-sub">age, BMI → spline terms · alcohol, diet, mental → standardised</text>
+  <text x="80" y="408" class="box-sub">sleep, smoking, activity → one-hot · sex → binary</text>
+
+  <path d="M 290 422 L 290 446" class="edge"/>
+  <text x="298" y="440" class="edge-label">predict_proba</text>
+
+  <rect x="60" y="448" width="460" height="80" rx="6" fill="#ffffff" stroke="#7fcf9f"/>
+  <text x="80" y="472" class="formula">risk  = P(CVD within ~10 yr | age, sex, BMI, lifestyle)</text>
+  <text x="80" y="494" class="formula">ratio = risk / 0.0598</text>
+  <text x="80" y="514" class="box-sub">0.0598 is the cohort event rate: 27,454 events among 458,840 participants.</text>
+
+  <path d="M 290 528 L 290 552" class="edge"/>
+
+  <rect x="60" y="554" width="220" height="80" rx="6" fill="#d5f2e1" stroke="#7fcf9f"/>
+  <text x="80" y="576" class="tag" fill="#2f6f4e">YOUR ESTIMATED RISK</text>
+  <text x="80" y="606" class="big" fill="#1f2933">7.8 %</text>
+  <text x="80" y="626" class="box-sub">1.3× the study average (example)</text>
+
+  <rect x="300" y="554" width="220" height="80" rx="6" fill="#ffffff" stroke="#7fcf9f"/>
+  <text x="320" y="576" class="tag" fill="#7b8794">STUDY AVERAGE</text>
+  <text x="320" y="606" class="big" fill="#52606d">6.0 %</text>
+  <text x="320" y="626" class="box-sub">UK Biobank participants</text>
+
+  <!-- ============ Sections 2 and 3: causal ============ -->
+  <rect x="560" y="296" width="500" height="352" rx="10" fill="#f3ecfb" stroke="#b79ae0"/>
+  <text x="576" y="316" class="lane">SECTIONS 2 &amp; 3 · WHAT COULD HELP   (CAUSAL)</text>
+
+  <rect x="580" y="330" width="460" height="92" rx="6" fill="#ffffff" stroke="#b79ae0"/>
+  <text x="600" y="352" class="box-title">Recode to causal levels 0 / 1 / 2, then pick the healthier move</text>
+  <text x="600" y="370" class="box-sub">alcohol {0,1}→0, {2}→1, {3,4}→2 · diet {0,1}→0, {2}→1, {3}→2 · mental {2,3}→2</text>
+  <text x="600" y="388" class="box-sub">One improvement per domain, e.g. sleep 0→1, diet 1→2, alcohol 2→1,</text>
+  <text x="600" y="406" class="box-sub">smoking 2→1 (quitting). Domains already at the best level get no move.</text>
+
+  <path d="M 810 422 L 810 446" class="edge"/>
+  <text x="818" y="440" class="edge-label">(domain, baseline, destination)</text>
+
+  <rect x="580" y="448" width="460" height="80" rx="6" fill="#ffffff" stroke="#b79ae0"/>
+  <text x="600" y="470" class="box-title">Look up precomputed causal-forest estimates</text>
+  <text x="600" y="488" class="file">single_variable_ate.joblib · one row per transition (24 in total)</text>
+  <text x="600" y="504" class="file">combined_variable_ate.joblib · arms: A only / B only / both improve</text>
+  <text x="600" y="520" class="box-sub">Fitted with grf causal forests on the longitudinal cohort (src/causal_forest).</text>
+
+  <path d="M 810 528 L 810 552" class="edge"/>
+
+  <rect x="580" y="554" width="460" height="80" rx="6" fill="#ffffff" stroke="#b79ae0"/>
+  <text x="600" y="574" class="formula">effect (pp) = ATE × 100</text>
+  <text x="600" y="592" class="formula">95% CI = [low, high] × 100</text>
+  <text x="600" y="610" class="formula">significant = (low &gt; 0) or (high &lt; 0)</text>
+  <text x="600" y="628" class="box-sub">Forest plot: dot = effect, bar = 95% CI, dashed line = no change.</text>
+  <!-- mini forest plot -->
+  <line x1="950" y1="562" x2="950" y2="616" stroke="#7b8794" stroke-dasharray="3 3"/>
+  <line x1="900" y1="574" x2="970" y2="574" stroke="#8e6cc7" stroke-width="2"/><circle cx="935" cy="574" r="4" fill="#8e6cc7"/>
+  <line x1="925" y1="590" x2="1020" y2="590" stroke="#8e6cc7" stroke-width="2"/><circle cx="972" cy="590" r="4" fill="#8e6cc7"/>
+  <line x1="892" y1="606" x2="958" y2="606" stroke="#8e6cc7" stroke-width="2"/><circle cx="925" cy="606" r="4" fill="#8e6cc7"/>
+
+  <!-- -> advice -->
+  <path d="M 290 648 L 290 684" class="edge"/>
+  <text x="298" y="672" class="edge-label">current levels</text>
+  <path d="M 810 648 L 810 684" class="edge"/>
+  <text x="818" y="672" class="edge-label">effect of each healthier move</text>
+
+  <!-- ============ Section 4: advice ============ -->
+  <rect x="40" y="686" width="1020" height="96" rx="10" fill="#fdf0f0" stroke="#e8a3a3"/>
+  <text x="56" y="706" class="lane">SECTION 4 · ADVICE</text>
+  <text x="1044" y="706" text-anchor="end" class="code">cvd_webapp/recommendations.py</text>
+  <text x="60" y="730" class="box-title">Recommendation cards, one per lifestyle domain</text>
+  <text x="60" y="750" class="box-sub">Each card shows the person's current level, the study's own effect estimate for the healthier move (with its CI), and guideline-grounded advice</text>
+  <text x="60" y="768" class="box-sub">(AHA diet targets, WHO activity, UK CMO alcohol, NICE smoking). Advice is kept separate from the causal numbers because most effects were null.</text>
+
+  <!-- footnote -->
+  <text x="40" y="820" class="box-sub" font-weight="700">Reading the two kinds of number</text>
+  <text x="40" y="840" class="box-sub">Section 1 is an associational prediction: the chance of CVD for people like you (C-statistic 0.718). It does not say what caused the risk.</text>
+  <text x="40" y="858" class="box-sub">Sections 2–3 are causal estimates: the absolute change in CVD risk, in percentage points, from changing one habit versus keeping it unchanged.</text>
+  <text x="40" y="876" class="box-sub">The app never combines the two: the predicted risk is not adjusted by the causal effects, and each is shown with its own uncertainty.</text>
+</svg>

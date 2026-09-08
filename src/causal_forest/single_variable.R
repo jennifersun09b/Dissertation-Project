@@ -1,4 +1,4 @@
-# Run with: Rscript single_variable3.R
+# Run with: Rscript single_variable.R
 
 # =============================================================================
 # Refined single-variable causal-forest analysis

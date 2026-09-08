@@ -3,7 +3,7 @@
 
 This file is deliberately descriptive only: it does not merge cohorts, assign
 CVD timing groups, filter participants, or write analysis datasets. The imaging
-visit and CVD timing logic lives in ``imaging_visit_separation.py``.
+visit and CVD timing logic lives in ``04_imaging_visit_separation.py``.
 
 Environment variables may override every input path:
   BASELINE_SOURCE_PATH, OUTCOME_SOURCE_PATH, LIFESTYLE_SOURCE_PATH,

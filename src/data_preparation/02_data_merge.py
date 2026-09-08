@@ -2,7 +2,7 @@
 
 Outputs:
   baseline.csv     -> predictive_model.py
-  longitudinal.csv -> EDA_longitudinal.py
+  longitudinal.csv -> 03_eda_longitudinal.py
 
 Input and output paths can be overridden with BASELINE_SOURCE_PATH,
 OUTCOME_SOURCE_PATH, LIFESTYLE_SOURCE_PATH, and OUTPUT_DIR.

@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="790" viewBox="0 0 1100 790" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6472"/>
+    </marker>
+    <style>
+      .title { font-size: 22px; font-weight: 700; fill: #1f2933; }
+      .subtitle { font-size: 13px; fill: #5b6472; }
+      .lane { font-size: 11.5px; font-weight: 700; letter-spacing: 1.5px; fill: #7b8794; }
+      .box-title { font-size: 14px; font-weight: 700; fill: #1f2933; }
+      .box-sub { font-size: 12px; fill: #52606d; }
+      .code { font-family: Menlo, Consolas, monospace; font-size: 11px; fill: #323f4b; }
+      .file { font-family: Menlo, Consolas, monospace; font-size: 10.5px; fill: #616e7c; }
+      .edge { stroke: #5b6472; stroke-width: 1.6; fill: none; marker-end: url(#arrow); }
+      .line { stroke: #5b6472; stroke-width: 1.6; fill: none; }
+      .edge-label { font-size: 11px; fill: #5b6472; }
+    </style>
+  </defs>
+
+  <rect width="1100" height="790" fill="#ffffff"/>
+  <text x="40" y="42" class="title">Project structure and logic</text>
+  <text x="40" y="62" class="subtitle">Raw UK Biobank tables flow through one shared preparation stage into two modelling branches.</text>
+  <text x="40" y="79" class="subtitle">The artefacts exported by each branch power the results web app.</text>
+
+  <!-- ============ Lane 1: data sources ============ -->
+  <rect x="40" y="100" width="1020" height="112" rx="10" fill="#fff8e6" stroke="#f0c36d"/>
+  <text x="56" y="120" class="lane">1 · DATA SOURCES</text>
+
+  <rect x="60" y="134" width="180" height="62" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="150" y="158" text-anchor="middle" class="box-title">Baseline covariates</text>
+  <text x="150" y="178" text-anchor="middle" class="box-sub">age · sex · BMI · eid</text>
+
+  <rect x="258" y="134" width="180" height="62" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="348" y="158" text-anchor="middle" class="box-title">Lifestyle assessments</text>
+  <text x="348" y="178" text-anchor="middle" class="box-sub">touchscreen items · T0 and T2</text>
+
+  <rect x="456" y="134" width="180" height="62" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="546" y="158" text-anchor="middle" class="box-title">Outcomes</text>
+  <text x="546" y="178" text-anchor="middle" class="box-sub">CVD · CVD + AF + HF</text>
+
+  <rect x="654" y="134" width="180" height="62" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="744" y="158" text-anchor="middle" class="box-title">CVD event timing</text>
+  <text x="744" y="178" text-anchor="middle" class="box-sub">first event date per person</text>
+
+  <rect x="852" y="134" width="188" height="62" rx="6" fill="#ffffff" stroke="#f0c36d"/>
+  <text x="946" y="158" text-anchor="middle" class="box-title">Imaging visit dates</text>
+  <text x="946" y="178" text-anchor="middle" class="box-sub">T2 assessment date</text>
+
+  <!-- sources -> preparation -->
+  <path d="M 150 196 L 150 226 L 318 226" class="line"/>
+  <path d="M 348 196 L 348 226" class="line"/>
+  <path d="M 546 196 L 546 226 L 318 226" class="line"/>
+  <path d="M 318 226 L 318 246" class="edge"/>
+  <path d="M 744 196 L 744 246" class="edge"/>
+  <path d="M 946 196 L 946 226 L 752 226 L 752 246" class="edge"/>
+
+  <!-- ============ Lane 2: data preparation ============ -->
+  <rect x="40" y="248" width="1020" height="150" rx="10" fill="#eef4ff" stroke="#9db8f0"/>
+  <text x="56" y="268" class="lane">2 · DATA PREPARATION</text>
+  <text x="1044" y="268" text-anchor="end" class="code">src/data_preparation/</text>
+
+  <rect x="60" y="282" width="154" height="102" rx="6" fill="#ffffff" stroke="#9db8f0"/>
+  <text x="137" y="304" text-anchor="middle" class="box-title">Overview</text>
+  <text x="137" y="322" text-anchor="middle" class="code">01_overview_dataset.py</text>
+  <text x="137" y="342" text-anchor="middle" class="box-sub">descriptive only:</text>
+  <text x="137" y="358" text-anchor="middle" class="box-sub">shapes, types, missingness</text>
+
+  <rect x="232" y="282" width="172" height="102" rx="6" fill="#ffffff" stroke="#9db8f0"/>
+  <text x="318" y="304" text-anchor="middle" class="box-title">Merge and score</text>
+  <text x="318" y="322" text-anchor="middle" class="code">02_data_merge.py</text>
+  <text x="318" y="342" text-anchor="middle" class="box-sub">6 lifestyle scores at T0, T2</text>
+  <text x="318" y="358" text-anchor="middle" class="file">baseline.csv</text>
+  <text x="318" y="372" text-anchor="middle" class="file">longitudinal.csv</text>
+
+  <rect x="422" y="282" width="172" height="102" rx="6" fill="#ffffff" stroke="#9db8f0"/>
+  <text x="508" y="304" text-anchor="middle" class="box-title">Longitudinal EDA</text>
+  <text x="508" y="322" text-anchor="middle" class="code">03_eda_longitudinal.py</text>
+  <text x="508" y="342" text-anchor="middle" class="box-sub">impute age, BMI, sex only</text>
+  <text x="508" y="358" text-anchor="middle" class="file">longitudinal_after_eda.csv</text>
+
+  <rect x="612" y="282" width="212" height="102" rx="6" fill="#ffffff" stroke="#9db8f0"/>
+  <text x="718" y="304" text-anchor="middle" class="box-title">Timing separation</text>
+  <text x="718" y="322" text-anchor="middle" class="code">04_imaging_visit_separation.py</text>
+  <text x="718" y="342" text-anchor="middle" class="box-sub">CVD before / between / after T2</text>
+  <text x="718" y="358" text-anchor="middle" class="file">primary_causalML_after_eda.csv</text>
+  <text x="718" y="372" text-anchor="middle" class="file">sensitive_causalML_after_eda.csv</text>
+
+  <rect x="842" y="282" width="198" height="102" rx="6" fill="#ffffff" stroke="#9db8f0"/>
+  <text x="941" y="304" text-anchor="middle" class="box-title">Cohort recoding</text>
+  <text x="941" y="322" text-anchor="middle" class="code">05_cohort_recoding.py</text>
+  <text x="941" y="342" text-anchor="middle" class="box-sub">collapse to 0/1/2, T2 transitions</text>
+  <text x="941" y="358" text-anchor="middle" class="file">primary_single_variable.csv</text>
+  <text x="941" y="372" text-anchor="middle" class="file">sensitive_single_variable.csv</text>
+
+  <path d="M 404 333 L 420 333" class="edge"/>
+  <path d="M 594 333 L 610 333" class="edge"/>
+  <path d="M 824 333 L 840 333" class="edge"/>
+
+  <!-- preparation -> branches -->
+  <path d="M 275 384 L 275 438" class="edge"/>
+  <text x="283" y="416" class="edge-label">baseline.csv</text>
+  <path d="M 941 384 L 941 438" class="edge"/>
+  <text x="780" y="416" class="edge-label">primary and sensitive cohorts</text>
+
+  <!-- ============ Lane 3: branches ============ -->
+  <rect x="40" y="440" width="470" height="196" rx="10" fill="#eafaf1" stroke="#7fcf9f"/>
+  <text x="56" y="460" class="lane">3A · BASELINE PREDICTIVE MODEL</text>
+  <text x="60" y="486" class="code">src/predictive_model/predictive_model.py</text>
+  <text x="60" y="510" class="box-sub">Input: baseline.csv (458,840 participants, 9 predictors)</text>
+  <text x="60" y="528" class="box-sub">Logistic regression vs random forest, XGBoost, LightGBM</text>
+  <text x="60" y="546" class="box-sub">AUC, calibration, Brier score, decision curves, importance</text>
+  <text x="60" y="564" class="box-sub">Run once per outcome (OUTCOME environment variable)</text>
+  <rect x="60" y="590" width="430" height="24" rx="4" fill="#d5f2e1"/>
+  <text x="275" y="606" text-anchor="middle" class="file">exports  predictive_model.joblib  (logistic pipeline)</text>
+
+  <rect x="590" y="440" width="470" height="196" rx="10" fill="#f3ecfb" stroke="#b79ae0"/>
+  <text x="606" y="460" class="lane">3B · CAUSAL FORESTS (LONGITUDINAL)</text>
+  <text x="610" y="486" class="code">src/causal_forest/*.R   (grf)</text>
+  <text x="610" y="510" class="box-sub">Input: recoded cohorts (71,428 participants with T0 and T2)</text>
+  <text x="610" y="528" class="box-sub">single_variable.R · 24 lifestyle transitions, binary forests</text>
+  <text x="610" y="546" class="box-sub">combined_variable.R · paired changes, multi-arm forests</text>
+  <text x="610" y="564" class="box-sub">unmeasured_confounding.R · baseline_reference.R (sensitivity)</text>
+  <rect x="610" y="590" width="430" height="24" rx="4" fill="#e6dbf5"/>
+  <text x="825" y="606" text-anchor="middle" class="file">exports  single_variable_ate.joblib · combined_variable_ate.joblib</text>
+
+  <!-- branches -> app -->
+  <path d="M 275 636 L 275 674" class="edge"/>
+  <text x="283" y="660" class="edge-label">absolute risk</text>
+  <path d="M 825 636 L 825 674" class="edge"/>
+  <text x="833" y="660" class="edge-label">effects of lifestyle change</text>
+
+  <!-- ============ Lane 4: delivery ============ -->
+  <rect x="40" y="676" width="1020" height="96" rx="10" fill="#fdf0f0" stroke="#e8a3a3"/>
+  <text x="56" y="696" class="lane">4 · DELIVERY</text>
+  <text x="1044" y="696" text-anchor="end" class="code">cvd_webapp/</text>
+  <text x="60" y="720" class="box-title">Streamlit web app</text>
+  <text x="1044" y="720" text-anchor="end" class="code">app.py · model_io.py · questions.py · recommendations.py · theme.py</text>
+  <text x="60" y="742" class="box-sub">Questionnaire → absolute 10-year CVD risk (3A) → effects of changing one or two habits (3B) → guideline advice</text>
+  <text x="1044" y="760" text-anchor="end" class="file">how the numbers are computed: docs/figures/risk_calculation.svg</text>
+</svg>

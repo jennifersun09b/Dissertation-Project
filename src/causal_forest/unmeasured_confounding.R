@@ -1,4 +1,4 @@
-# Run with: Rscript unmeasured_confounder_refined.R
+# Run with: Rscript unmeasured_confounding.R
 
 # =============================================================================
 # Unmeasured-confounding sensitivity analysis for the single-variable
@@ -7,7 +7,7 @@
 # Plan, in plain words:
 #   1. Load the data (the SAME cohort file the primary model used).
 #   2. Refit the SAME binary causal forest, with the SAME seed, tree count and
-#      tuning settings as single_variable3.R, so the sensitivity analysis is
+#      tuning settings as single_variable.R, so the sensitivity analysis is
 #      attached to the numbers that appear in the primary results table.
 #   3. Put the effect on a risk scale, using doubly robust arm-specific risks
 #      instead of a clipped average of the control-arm prediction.
@@ -24,13 +24,13 @@
 # What changed relative to unmeasured_confounder_running.R, and why
 # -----------------------------------------------------------------------------
 #   1. DATA_PATH, OUTCOME_NAME, ANALYSIS_LABEL and OUTPUT_DIR are now read from
-#      the environment, exactly as in single_variable3.R. The old script
+#      the environment, exactly as in single_variable.R. The old script
 #      hardcoded the sensitive-cohort path, so the primary cohort was never
 #      given an E-value. The default here is the PRIMARY cohort; the sensitive
 #      run is one environment variable away (example below).
 #
 #   2. The contrast registry now carries health_direction and
-#      interpretation_flag, matching single_variable3.R. The old `direction`
+#      interpretation_flag, matching single_variable.R. The old `direction`
 #      column labelled mental-health and alcohol increases as "increase", which
 #      is a deterioration, so the sensitivity table could not be joined to the
 #      primary table without re-reading the labels by hand.
@@ -40,7 +40,7 @@
 #
 #   4. E-values are computed for ALL FIVE estimands (full sample, overlap
 #      weighted, and the three propensity trims), not only for the 0.05-0.95
-#      trimmed subset. The primary estimand in single_variable3.R is the FULL
+#      trimmed subset. The primary estimand in single_variable.R is the FULL
 #      eligible sample, so the old script produced E-values for an estimand that
 #      is not the headline one.
 #
@@ -77,7 +77,7 @@
 #  10. Heterogeneity output (variable importance, calibration, best linear
 #      projection, RATE, CATE quartiles, subgroup ATEs) was computed and printed
 #      but never saved. It is now written to CSV, using the same unclass() fix
-#      as single_variable3.R, without which the calibration, BLP and RATE
+#      as single_variable.R, without which the calibration, BLP and RATE
 #      objects coerce to nothing.
 #
 #  11. Subgroup E-values are added, for the same seven subgroups the primary
@@ -91,15 +91,15 @@
 # Example primary run (the default)
 #   DATA_PATH=/home/rmhiund/causal_analysis/Cohort/primary_single_variable.csv \
 #   OUTCOME_NAME=CVD_outcome ANALYSIS_LABEL=primary \
-#   OUTPUT_DIR=/path/unmeasured_confounder_primary Rscript unmeasured_confounder_refined.R
+#   OUTPUT_DIR=/path/unmeasured_confounder_primary Rscript unmeasured_confounding.R
 #
 # Example sensitive run
 #   DATA_PATH=/home/rmhiund/causal_analysis/Cohort/sensitive_single_variable.csv \
 #   ANALYSIS_LABEL=sensitive \
-#   OUTPUT_DIR=/path/unmeasured_confounder_sensitive Rscript unmeasured_confounder_refined.R
+#   OUTPUT_DIR=/path/unmeasured_confounder_sensitive Rscript unmeasured_confounding.R
 #
 # Example fast check (no bootstrap, one domain)
-#   CONTRAST_DOMAINS=mental N_BOOT=0 NUM_TREES=1000 Rscript unmeasured_confounder_refined.R
+#   CONTRAST_DOMAINS=mental N_BOOT=0 NUM_TREES=1000 Rscript unmeasured_confounding.R
 #
 # Each comparison is binary:
 #     stayed (W = 0) = people who kept their baseline value
@@ -163,7 +163,7 @@ OUTPUT_DIR <- env_chr(
   file.path(getwd(), paste0("unmeasured_confounder_results_", ANALYSIS_LABEL))
 )
 
-# These four must match single_variable3.R for the sensitivity analysis to refer
+# These four must match single_variable.R for the sensitivity analysis to refer
 # to the same fitted model as the primary result.
 RANDOM_SEED <- env_int("RANDOM_SEED", 42)
 NUM_TREES <- env_int("NUM_TREES", 5000)
@@ -217,7 +217,7 @@ log_msg("Propensity floor used inside the AIPW arm-risk scores: ", PROPENSITY_FL
 # health_direction describes the CLINICAL direction of each transition. It is
 # not the direction of the raw score: for mental health and alcohol a higher
 # score is worse, so an increase is a deterioration. interpretation_flag records
-# the score convention. These two columns are copied from single_variable3.R so
+# the score convention. These two columns are copied from single_variable.R so
 # that this file and the primary results table use identical labels.
 contrasts <- tribble(
   ~domain, ~t0_col, ~t1_col, ~baseline, ~destination, ~raw_direction, ~health_direction, ~interpretation_flag,
@@ -649,7 +649,7 @@ risk_scale_from_scores <- function(scores, idx, weights = NULL) {
 # Participant bootstrap of the same scores. No forest is refitted: the AIPW
 # arm risks are means of fixed per-person scores, so resampling people is exact
 # for those quantities conditional on the fitted nuisance functions. This is the
-# same argument single_variable3.R uses for its subgroup bootstrap.
+# same argument single_variable.R uses for its subgroup bootstrap.
 bootstrap_arm_risks <- function(scores, idx, weights = NULL, seed_offset = 0) {
   if (N_BOOT <= 0) return(NULL)
   s0 <- scores$score0[idx]
@@ -1316,7 +1316,7 @@ run_transition <- function(spec, index) {
     prediction <- tryCatch(predict(forest, estimate.variance = TRUE), error = function(e) NULL)
     cate <- if (!is.null(prediction)) as.numeric(prediction$predictions) else rep(NA_real_, nrow(X))
 
-    # Priorities follow the clinical direction, matching single_variable3.R:
+    # Priorities follow the clinical direction, matching single_variable.R:
     # for an improvement the benefit is a NEGATIVE risk difference.
     priorities <- if (spec$health_direction == "improvement") {
       -cate

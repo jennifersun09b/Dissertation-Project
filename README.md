@@ -1,186 +1,248 @@
 # Cardiovascular Risk Prediction and Longitudinal Lifestyle Change in UK Biobank
 
-**Predictive and Causal Machine-Learning Models** — MSc Health Data Science dissertation, Institute of Health Informatics, UCL (Sep 2026).
+**Predictive and Causal Machine-Learning Models**
+MSc Health Data Science dissertation, Institute of Health Informatics, UCL (September 2026).
 
-The full dissertation is in [`docs/dissertation.pdf`](docs/dissertation.pdf). The deployed results web application lives in [`cvd_webapp/`](cvd_webapp/) (also maintained at [jennifersun09b/cvd-webapp](https://github.com/jennifersun09b/cvd-webapp)).
+This repository holds the complete analysis code behind the dissertation: the
+data-preparation pipeline for UK Biobank, a baseline predictive model of
+10-year cardiovascular disease (CVD) risk, causal-forest analyses of
+longitudinal lifestyle change, and the Streamlit web app that presents both
+sets of results to a user.
 
-## Code overview
+- Full dissertation: [`docs/dissertation.pdf`](docs/dissertation.pdf)
+- Step-by-step runbook: [`docs/WORKFLOW.md`](docs/WORKFLOW.md)
+- Deployed web app source: [`cvd_webapp/`](cvd_webapp/) (also maintained at
+  [jennifersun09b/cvd-webapp](https://github.com/jennifersun09b/cvd-webapp))
 
+> UK Biobank data cannot be redistributed. No participant-level data, derived
+> cohorts, or result tables are stored in this repository; `.gitignore` blocks
+> every CSV/TSV/parquet/RDS file. Only the three small model artefacts the web
+> app needs are committed.
 
-This repository contains the full analysis pipeline for the dissertation. The
-workflow moves from raw UK Biobank source tables to two modelling branches, a
-causal-forest branch built on the longitudinal lifestyle-change cohort and a
-predictive-modelling branch built on the baseline cohort.
+## Study in one paragraph
 
-## Pipeline at a glance
+In 71,428 UK Biobank participants with six lifestyle domains (sleep, diet,
+alcohol, smoking, physical activity, mental health) measured at both the
+baseline and imaging visits, doubly robust causal forests estimated the
+average treatment effect of 24 single-domain lifestyle transitions, and
+multi-arm forests estimated 120 joint contrasts. A complementary prediction
+model, comparing logistic regression with three tree-based ensembles in
+458,840 participants, supplied absolute CVD risk (AUC 0.714 to 0.718, logistic
+regression retained for interpretability). Most transitions showed no evidence
+of effect, and well-supported transitions excluded absolute risk differences
+above roughly one percentage point. Causal estimates were externally validated
+in NHEFS, and both streams were integrated into an interactive tool.
+
+## Project structure and logic
+
+![Project structure](docs/figures/project_structure.svg)
+
+Raw UK Biobank tables pass through one shared preparation stage
+(`src/data_preparation/`) and then split into two independent modelling
+branches. Branch A fits the baseline predictive model on every participant.
+Branch B fits causal forests on the smaller longitudinal cohort with lifestyle
+measured at two time points. Each branch exports a joblib artefact, and the
+web app consumes those artefacts.
 
 ```
-overview_dataset.py            (descriptive only, no outputs)
-        |
-data_merge_new.py
-        |-------------------------------------------.
-        v                                            v
-data_merge/longitudinal.csv                 data_merge/baseline.csv
-        |                                            |
-EDA_longitudinal.py                          predictive_model.py
-        |                                    (preprocessing + modelling,
-EDA/longitudinal_after_eda.csv                run once per outcome)
-        |
-imaging_visit_separation.py
-  + imaging_visit_date.tsv
-  + bhf_all_individuals_plus_cvd_events.csv
-        |
-        |-- EDA/primary_causalML_after_eda.csv
-        |-- EDA/sensitive_causalML_after_eda.csv
-        |-- EDA/cvd_timing_audit.csv
-        |
-cohort.py   (lifestyle recoding, applied to both cohorts)
-        |
-        |-- Cohort/primary_single_variable.csv
-        |-- Cohort/sensitive_single_variable.csv
-        |-- Cohort/primary_transition_summary.csv
-        |
-single_variable3.R  and  combined_variable6.R
-  (each run once per cohort: primary and sensitivity)
+Dissertation-Project/
+├── README.md
+├── requirements.txt                 Python packages for the pipeline
+├── docs/
+│   ├── dissertation.pdf             the written dissertation
+│   ├── WORKFLOW.md                  execution order, commands, env vars
+│   └── figures/                     the two diagrams shown in this README
+├── src/
+│   ├── data_preparation/            run in numbered order
+│   │   ├── 01_overview_dataset.py          describe the raw source tables
+│   │   ├── 02_data_merge.py                lifestyle scores at T0 and T2, merge
+│   │   ├── 03_eda_longitudinal.py          clean the longitudinal cohort
+│   │   ├── 04_imaging_visit_separation.py  CVD timing vs the imaging visit
+│   │   └── 05_cohort_recoding.py           collapse to 0/1/2 levels, transitions
+│   ├── predictive_model/
+│   │   └── predictive_model.py             Branch A: baseline CVD risk model
+│   └── causal_forest/
+│       ├── install_packages.R              R dependencies
+│       ├── single_variable.R               Branch B: 24 single-domain transitions
+│       ├── combined_variable.R             Branch B: paired transitions (multi-arm)
+│       ├── unmeasured_confounding.R        sensitivity: E-values and QBA
+│       └── baseline_reference.R            baseline causal reference model
+└── cvd_webapp/                      Streamlit app (own README and requirements)
+    ├── app.py · questions.py · model_io.py · recommendations.py · theme.py
+    └── model/                       three joblib artefacts exported by src/
 ```
 
-## Step 1 — Dataset overview
+## Analysis pipeline
 
-`overview_dataset.py` inspects the five raw source tables (baseline
-covariates, outcomes, repeated lifestyle assessments, CVD event timing, and
-imaging visit dates). It is deliberately descriptive only. It prints shapes,
-dtypes, missingness, and key value counts, and it does not merge, filter, or
-write any analysis dataset. The imaging-visit and CVD-timing separation logic
-lives in `imaging_visit_separation.py` (step 4).
+```mermaid
+flowchart TD
+    RAW[("UK Biobank source tables<br/>covariates · lifestyle · outcomes · CVD dates · imaging dates")]
+    S1["01_overview_dataset.py<br/><i>descriptive only</i>"]
+    S2["02_data_merge.py<br/>six lifestyle scores at T0 and T2"]
+    BASE[/"data_merge/baseline.csv<br/>458,840 participants"/]
+    LONG[/"data_merge/longitudinal.csv<br/>complete T0 + T2 lifestyle"/]
+    S3["03_eda_longitudinal.py"]
+    S4["04_imaging_visit_separation.py<br/>CVD before / between / after T2"]
+    PRIM[/"primary cohort"/]
+    SENS[/"sensitivity cohort<br/>(CVD after T2 only)"/]
+    S5["05_cohort_recoding.py<br/>0/1/2 levels · T2 transitions"]
+    PM["predictive_model.py<br/>LR · RF · XGBoost · LightGBM"]
+    SV["single_variable.R<br/>24 binary causal forests"]
+    CV["combined_variable.R<br/>multi-arm causal forests"]
+    UC["unmeasured_confounding.R<br/>E-values · QBA"]
+    A1[["predictive_model.joblib"]]
+    A2[["single_variable_ate.joblib"]]
+    A3[["combined_variable_ate.joblib"]]
+    APP["cvd_webapp · Streamlit"]
+
+    RAW -.-> S1
+    RAW --> S2
+    S2 --> BASE
+    S2 --> LONG
+    LONG --> S3 --> S4
+    S4 --> PRIM
+    S4 --> SENS
+    PRIM --> S5
+    SENS --> S5
+    BASE --> PM --> A1
+    S5 --> SV --> A2
+    S5 --> CV --> A3
+    S5 --> UC
+    A1 --> APP
+    A2 --> APP
+    A3 --> APP
+```
+
+| Step | Script | Input | Output |
+| --- | --- | --- | --- |
+| 1 | `01_overview_dataset.py` | five raw source tables | console summary only |
+| 2 | `02_data_merge.py` | raw tables | `baseline.csv`, `longitudinal.csv` |
+| 3 | `03_eda_longitudinal.py` | `longitudinal.csv` | `longitudinal_after_eda.csv` |
+| 4 | `04_imaging_visit_separation.py` | step 3 output, imaging dates, CVD dates | `primary_causalML_after_eda.csv`, `sensitive_causalML_after_eda.csv`, `cvd_timing_audit.csv` |
+| 5 | `05_cohort_recoding.py` | both step 4 cohorts | `primary_single_variable.csv`, `sensitive_single_variable.csv` |
+| 6A | `predictive_model.py` | `baseline.csv` | metrics, plots, `predictive_model.joblib` |
+| 6B | `single_variable.R`, `combined_variable.R` | step 5 cohorts | ATE tables, forests, two joblib artefacts |
+| 6C | `unmeasured_confounding.R`, `baseline_reference.R` | step 5 cohorts | sensitivity and reference results |
+
+Design decisions worth knowing before running anything:
+
+- **Lifestyle categories are never imputed.** Fractional or synthetic
+  categories would invalidate the transition definitions. Only age, BMI, and
+  sex are imputed where needed.
+- **Two cohorts, one recoding.** The primary cohort keeps participants whose
+  CVD occurred between baseline and the imaging visit. The sensitivity cohort
+  keeps only CVD after the imaging visit, so every outcome follows the T2
+  exposure measurement. Both go through the same recoding and the same R
+  scripts.
+- **Two outcomes.** `def_CVD_AFTER` is the primary endpoint;
+  `def_CVD_AF_HF_AFTER` adds atrial fibrillation and heart failure.
+  `predictive_model.py` is run once per outcome.
+
+## How the web app calculates risk
+
+![Risk calculation](docs/figures/risk_calculation.svg)
+
+The questionnaire reproduces the UK Biobank touchscreen items that built the
+nine modelling variables, so a user's answers land on exactly the scales the
+models were trained on. From there the app follows two separate paths and
+never mixes them.
+
+1. **Your risk (associational).** Age, sex, BMI, and the six raw lifestyle
+   scores go into the exported logistic-regression pipeline. Its
+   `predict_proba` output is the absolute chance of CVD over roughly ten
+   years, shown next to the cohort event rate of 5.98 percent and as a ratio
+   to it.
+2. **What could help (causal).** The raw scores are collapsed to the 0/1/2
+   causal levels, and each domain gets one healthier move (for example sleep
+   0 to 1, alcohol 2 to 1, or quitting smoking). The app looks that transition
+   up in the precomputed causal-forest table and shows the average treatment
+   effect in percentage points with its 95 percent confidence interval as a
+   forest plot. A second panel does the same for pairs of changes using the
+   multi-arm table (A only, B only, both).
+3. **Advice.** Recommendation cards combine the user's current level, the
+   study's own estimate for the healthier move, and guideline-based advice.
+   Advice is deliberately kept separate from the causal numbers because most
+   transition effects were null.
+
+The predicted risk is not adjusted by the causal effects. Each number carries
+its own uncertainty and its own interpretation.
+
+## Running the code
+
+### Requirements
 
 ```bash
-python overview_dataset.py
+pip install -r requirements.txt
+Rscript src/causal_forest/install_packages.R
 ```
 
-## Step 2 — Data merge
+The R scripts use `grf`, `tidyverse`, and `reticulate` (to export joblib
+files through Python).
 
-`data_merge_new.py` computes the six lifestyle scores (sleep, smoking,
-alcohol, diet, physical activity, mental health) at baseline (instance 0.0,
-T0) and at the imaging visit (instance 2.0, T2), merges them with the
-baseline covariates and both outcomes, and writes two datasets.
+### Configuration
 
-- `data_merge/baseline.csv` holds every merged participant with baseline
-  covariates, the T0/T2 lifestyle variables, and both outcome columns,
-  `def_CVD_AFTER` (primary endpoint) and `def_CVD_AF_HF_AFTER` (sensitivity
-  composite of CVD, atrial fibrillation, and heart failure). This file feeds
-  the predictive-modelling branch.
-- `data_merge/longitudinal.csv` keeps only participants with complete
-  observed lifestyle exposures at both T0 and T2. This file feeds the
-  causal-forest branch.
+Every script reads its input and output locations from environment variables
+and falls back to the HPC paths under `/home/rmhiund/causal_analysis/`. Set
+them for a local run, for example:
 
 ```bash
-python data_merge_new.py
+OUTPUT_DIR=./data_merge python src/data_preparation/02_data_merge.py
 ```
 
-## Step 3 — Longitudinal EDA
+| Variable | Used by |
+| --- | --- |
+| `BASELINE_SOURCE_PATH`, `OUTCOME_SOURCE_PATH`, `LIFESTYLE_SOURCE_PATH`, `EVENT_SOURCE_PATH`, `IMAGING_DATE_PATH` | steps 1, 2, 4 |
+| `INPUT_PATH`, `OUTPUT_PATH`, `OUTPUT_DIR` | steps 2 to 5 |
+| `DATA_PATH`, `RESULT_DIR`, `OUTCOME` | `predictive_model.py` |
+| `DATA_PATH`, `ANALYSIS_LABEL`, `OUTPUT_DIR` | the R causal-forest scripts |
 
-`EDA_longitudinal.py` cleans `longitudinal.csv` and writes
-`EDA/longitudinal_after_eda.csv`. Lifestyle exposure categories are never
-imputed, because fractional or synthetic categories would invalidate the
-transition definitions used later. Only age, BMI, and sex are imputed when
-required, and `eid` is retained for the imaging/CVD-timing merge in step 4.
-
-```bash
-python EDA_longitudinal.py
-```
-
-## Step 4 — Imaging-visit and CVD-timing separation
-
-`imaging_visit_separation.py` merges `longitudinal_after_eda.csv` with the
-imaging-visit-date file and the CVD event-timing file, assigns every
-participant a CVD timing group relative to baseline (T0) and the imaging
-visit (T2), and splits the cohort.
-
-- `EDA/primary_causalML_after_eda.csv` — the primary cohort: no pre-baseline
-  CVD, keeping participants with CVD between baseline and imaging, CVD after
-  imaging, or no CVD.
-- `EDA/sensitive_causalML_after_eda.csv` — the sensitivity cohort: CVD after
-  imaging or no CVD only. This definition has cleaner temporality because
-  every outcome occurs after the T2 exposure measurement.
-- `EDA/cvd_timing_audit.csv` — counts for every timing group, including
-  excluded and unclassified participants.
+### Typical run
 
 ```bash
-python imaging_visit_separation.py
-```
+python src/data_preparation/01_overview_dataset.py
+python src/data_preparation/02_data_merge.py
+python src/data_preparation/03_eda_longitudinal.py
+python src/data_preparation/04_imaging_visit_separation.py
+python src/data_preparation/05_cohort_recoding.py
 
-## Step 5 — Cohort recoding
+# Branch A, primary endpoint
+OUTCOME=def_CVD_AFTER python src/predictive_model/predictive_model.py
 
-`cohort.py` applies the same lifestyle recoding independently to the primary
-and sensitivity cohorts (collapsing sparse categories and building the
-modified T2 transition variables, `*_t1_mod`) and writes:
-
-- `Cohort/primary_single_variable.csv`
-- `Cohort/sensitive_single_variable.csv`
-- `Cohort/primary_transition_summary.csv`
-
-Both recoded files serve the single-variable and the combined-variable
-causal-forest scripts. The combined-variable workflow constructs its paired
-treatments internally, so no separate combined CSV is needed.
-
-```bash
-python cohort.py
-```
-
-## Step 6A — Causal-forest modelling (longitudinal branch)
-
-`single_variable3.R` estimates per-domain causal forests and
-`combined_variable6.R` estimates paired-treatment causal forests. Each script
-runs once per cohort, controlled by `DATA_PATH`, `ANALYSIS_LABEL`, and
-`OUTPUT_DIR`.
-
-```bash
-# Primary cohort
+# Branch B, primary cohort (repeat with the sensitivity cohort)
 DATA_PATH=.../Cohort/primary_single_variable.csv ANALYSIS_LABEL=primary \
-  OUTPUT_DIR=.../results/single_primary Rscript single_variable3.R
+  OUTPUT_DIR=.../results/single_primary Rscript src/causal_forest/single_variable.R
 DATA_PATH=.../Cohort/primary_single_variable.csv ANALYSIS_LABEL=primary \
-  OUTPUT_DIR=.../results/combined_primary Rscript combined_variable6.R
-
-# Sensitivity cohort
-DATA_PATH=.../Cohort/sensitive_single_variable.csv ANALYSIS_LABEL=sensitivity \
-  OUTPUT_DIR=.../results/single_sensitivity Rscript single_variable3.R
-DATA_PATH=.../Cohort/sensitive_single_variable.csv ANALYSIS_LABEL=sensitivity \
-  OUTPUT_DIR=.../results/combined_sensitivity Rscript combined_variable6.R
+  OUTPUT_DIR=.../results/combined_primary Rscript src/causal_forest/combined_variable.R
 ```
 
-## Step 6B — Baseline predictive modelling
+Full commands, including the sensitivity cohort and the composite outcome,
+are in [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
 
-`predictive_model.py` contains both the preprocessing and the modelling for
-the baseline branch. Its default input is `data_merge/baseline.csv`, and the
-outcome is selected with the `OUTCOME` environment variable.
+### Web app
 
 ```bash
-# Primary endpoint
-OUTCOME=def_CVD_AFTER python predictive_model.py
-
-# Sensitivity composite endpoint
-OUTCOME=def_CVD_AF_HF_AFTER RESULT_DIR=.../results_composite python predictive_model.py
+cd cvd_webapp
+pip install -r requirements.txt
+streamlit run app.py
 ```
 
-## Additional analyses
+The app loads the three joblib files in `cvd_webapp/model/`. See
+[`cvd_webapp/README.md`](cvd_webapp/README.md) for deployment details.
 
-- `unmeasured_confounder_refined.R` — unmeasured-confounding sensitivity
-  analysis, run downstream of a recoded causal cohort.
-- `baseline.R` — a legacy baseline causal-forest analysis. It is not part of
-  the baseline predictive-model branch in step 6B.
-- `cvd_webapp/` — the results web application, which consumes the model
-  artifacts exported by the modelling scripts.
+## File history
 
-## Path configuration
+Scripts were renamed when the repository was reorganised. The table maps the
+names used during the dissertation to the current ones.
 
-Every Python script reads its input and output locations from environment
-variables (`BASELINE_SOURCE_PATH`, `OUTCOME_SOURCE_PATH`,
-`LIFESTYLE_SOURCE_PATH`, `EVENT_SOURCE_PATH`, `IMAGING_DATE_PATH`,
-`INPUT_PATH`, `OUTPUT_PATH`, `OUTPUT_DIR`, `DATA_PATH`, `RESULT_DIR`,
-`OUTCOME`), falling back to the HPC paths under
-`/home/rmhiund/causal_analysis/`. Override them locally as needed, for
-example:
-
-```bash
-OUTPUT_DIR=./data_merge python data_merge_new.py
-```
+| Former name | Current path |
+| --- | --- |
+| `overview_dataset.py` | `src/data_preparation/01_overview_dataset.py` |
+| `data_merge_new.py` | `src/data_preparation/02_data_merge.py` |
+| `EDA_longitudinal.py` | `src/data_preparation/03_eda_longitudinal.py` |
+| `imaging_visit_separation.py` | `src/data_preparation/04_imaging_visit_separation.py` |
+| `cohort.py` | `src/data_preparation/05_cohort_recoding.py` |
+| `predictive_model.py` | `src/predictive_model/predictive_model.py` |
+| `single_variable3.R` | `src/causal_forest/single_variable.R` |
+| `combined_variable6.R` | `src/causal_forest/combined_variable.R` |
+| `unmeasured_confounder_refined.R` | `src/causal_forest/unmeasured_confounding.R` |
+| `baseline.R` | `src/causal_forest/baseline_reference.R` |

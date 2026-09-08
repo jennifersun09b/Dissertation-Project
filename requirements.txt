@@ -1,0 +1,9 @@
+# Python dependencies for the analysis pipeline (src/data_preparation, src/predictive_model).
+# The web app has its own pinned requirements in cvd_webapp/requirements.txt.
+numpy
+pandas
+scikit-learn
+xgboost
+lightgbm
+matplotlib
+joblib
