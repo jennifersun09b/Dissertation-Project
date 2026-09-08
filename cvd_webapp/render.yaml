@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: cvd-lifestyle-risk-explorer
+    runtime: docker
+    plan: free
+    healthCheckPath: /_stcore/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"

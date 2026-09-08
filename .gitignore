@@ -1,0 +1,25 @@
+# Virtual environments / caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.Rhistory
+.RData
+
+# macOS metadata
+.DS_Store
+._*
+
+# Nested repo metadata set aside (cvd_webapp is tracked directly here)
+cvd_webapp/.git_disabled_nested_repo/
+
+# Data: UK Biobank / NHEFS derived data must never be committed
+*.csv
+*.tsv
+*.parquet
+*.rds
+*.xlsx
+data_merge/
+EDA/
+Cohort/
+results/

@@ -1,0 +1,16 @@
+# Visual theme for the CVD Lifestyle Risk Explorer ("Vivid Lime Tech").
+# Design tokens are mirrored in theme.py; keep the two in sync.
+
+[theme]
+base = "light"
+
+primaryColor = "#00A86B"              # actions, focus, slider fill
+backgroundColor = "#F4FBF0"           # page canvas
+secondaryBackgroundColor = "#FFFFFF"  # cards, inputs
+textColor = "#0B3B2E"                 # ink
+
+font = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+
+[client]
+# Hide the Deploy button / dev menu: this is a patient-facing page.
+toolbarMode = "minimal"

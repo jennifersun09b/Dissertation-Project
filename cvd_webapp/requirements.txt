@@ -1,0 +1,9 @@
+# Runtime matched to model/logistic.joblib (sklearn 1.0.2).
+# Use Python 3.9; this stack is not compatible with Python 3.14.
+streamlit==1.40.2
+scikit-learn==1.0.2
+pandas==1.5.3
+numpy==1.23.5
+scipy==1.8.1
+plotly==5.24.1
+joblib==1.1.0
